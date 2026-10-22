@@ -88,15 +88,6 @@ All cleaned datasets are saved separately from raw data to ensure raw records re
 ### Schema design and Data Pipeline
 The project operates under `sql_analysis` schema and transforms raw data imports into clean, normalized analysis tables.
 
-+------------------+       +-------------------+       +--------------------+
-|    raw_shop      | ----> |    shop_clean     | ----> |  v_sales_enriched  |
-+------------------+       +-------------------+       +--------------------+
-                                     |                           ^
-                                     v                           |
-                           +-------------------+                 |
-                           |   rfm_segments    | ----------------+
-                           +-------------------+
-
 ### Cleaned Analysis Tables
 - `shop_clean`: Transaction level detailed cleaned of nulls, negative quantities/prices and duplicate line items. Key primary key `line_id`.
 - `cpi_clean` & `inflation_clean`: Time series macroeconomic data normalized to monthly dates(`period_month`).
