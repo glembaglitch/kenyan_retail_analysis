@@ -84,6 +84,58 @@ All cleaned datasets are saved separately from raw data to ensure raw records re
 * **Statistical Analysis:** `scipy.stats`
 * **Visualization:** `matplotlib`, `seaborn`
 
+## SQL Analytics
+### Schema design and Data Pipeline
+The project operates under `sql_analysis` schema and transforms raw data imports into clean, normalized analysis tables.
+
++------------------+       +-------------------+       +--------------------+
+|    raw_shop      | ----> |    shop_clean     | ----> |  v_sales_enriched  |
++------------------+       +-------------------+       +--------------------+
+                                     |                           ^
+                                     v                           |
+                           +-------------------+                 |
+                           |   rfm_segments    | ----------------+
+                           +-------------------+
+
+### Cleaned Analysis Tables
+- `shop_clean`: Transaction level detailed cleaned of nulls, negative quantities/prices and duplicate line items. Key primary key `line_id`.
+- `cpi_clean` & `inflation_clean`: Time series macroeconomic data normalized to monthly dates(`period_month`).
+- `holidays_clean`: Calendar table of national holidays used to uvaluate holiday demand lift.
+- `population_clean`: Regional census data used to callcute revenue per capita.
+- `rfm_segmments`:Persistent customer scoring table based on Recency, Frequency and Monetary scores(1 to 5 scale).
+
+### Key Business Analysis & SQL Implementation
+**A. Core Aggregation & KPIs**
+- *Overal Metrics*: Compute aggregate revenue, total orders, distinct customers, Average Order Value (AOV), and Units per Order.
+- *DimensionalBreakdown*: Revenue cut by product, region/location, customer type, and time dimensions (day of week, hour of day).
+
+**B. Analytical Joins**
+- *Macro Intergration(`c_cpi_monthly`, `v_inflation_monthly`)*: Combines monthly sales with CPI data to calculate real life inflation-adjusted revenue growth.
+- *Holiday Lift Analysis*: Joins holiday dates with sales to compare average daily revenue on regular vs. holiday days and 3-day pre-holiday windows.
+- *Population Normalization*: Evaluates regional market penetration by calculating revenue per capita against official census population figures.
+- *Market Basket Analysis*: Self-joins `shop_clean` to identify co-purchased product pairs at the invoice level and customer level.
+
+**C. Window Functions**
+- *Growth & MoM Trends*: Utilizes `LAG()` and moving averages over 3-month frames to measure revenue momentum and MoM growth rate.
+- *Ranking & Pareto Distribution*: Uses `DENSE_RANK()` for top three products per location and `RANK()`/`NTILE()` to verify revenue concentration (Pareto principle).
+- *Customer Lifetime Value & Recency*: Uses windowed `ROW_NUMBER()`, cumulative `SUM()` and `LAG()` to track order sequencing and inter-purchase intervals.
+
+**D. Customer Cohorts & Retention Analysis**
+- Tracks customer acquisition month cohorts(`cohort_month`) using `MIN(invoice_month)`.
+- Generates a Retention Matrix (Heatmap) showing active customer drop-off over 0 to 60 months post-acquisition.
+- Analyzes revenue expansion per active customer across cohort lifecycles
+
+**E. RFM Segmentation**
+Customers are categorized into 10 actionable marketing tiers based on `NTILE(5)` scores across Recency, Frequency and Monetary value:
+   - *Champions*: High recency, frequency and spend (R $\ge$ 4, F $\ge$ 4, M $\ge$ 4).
+   - *Loyal Customers/Potential Loyalists*: Stable repeat purchasers.
+   - *At Risk/Can't Loose them*: High historical monetary spend with lagging recent activity.
+   - *Hibernating/Lost*: Low scores across all dimensions.
+
+### Reporting View and Execution
+To support downstreamm dashboard, a unified wide reporting view `v_sals_enriched` is created.
+It pre-joins sales transactions with holiday flags, inflation trends, and RFM segments, backed by database indexes on `customer_id`, `invoice_no`, and date keys for query perfomance.
+
 
 
 
