@@ -127,9 +127,42 @@ Customers are categorized into 10 actionable marketing tiers based on `NTILE(5)`
 To support downstreamm dashboard, a unified wide reporting view `v_sals_enriched` is created.
 It pre-joins sales transactions with holiday flags, inflation trends, and RFM segments, backed by database indexes on `customer_id`, `invoice_no`, and date keys for query perfomance.
 
+## Statistical Analysis
+(`statistical_analysis.ipynb`) notebook that uses hypothesis tests, confidence intervals and simple regression to answer practical questions about  sales, with the assumptions checked and a plain-language conclusion for each test.
 
+### What's in the notebook
 
+| # | Question | Methods |
+|---|----------|---------|
+| 1 | Do Premium customers pay more per transaction? | Shapiro-Wilk, Welch t-test, Mann-Whitney U, 95% CI for the difference |
+| 2 | Does average spend differ across Budget / Regular / Premium? | One-way ANOVA, Levene, Tukey HSD |
+| 3 | Do sales differ on public holidays? | Welch t-test, Mann-Whitney U |
+| 4 | Do weekends differ from weekdays? | Welch t-test, Mann-Whitney U |
+| 5 | Does spend differ across the 8 locations? | ANOVA, Kruskal-Wallis, Tukey HSD |
+| 6 | Is customer type linked to location? | Chi-square test, heatmap |
+| 7 | What is the overall mean transaction value, and how common are zero-quantity rows? | t-based CI, Wilson CI |
+| 8 | Do monthly sales move with inflation? | Pearson and Spearman correlation |
+| 9 | What drives transaction value? | Correlation, OLS regression, residual diagnostics |
+| 10 | Do segments differ when each customer counts once? | Customer-level aggregation, ANOVA |
 
+### Data files
+- `shop_data.csv`: 1,500 invoices (product, quantity, price, date, location, customer type)
+- `holidays_data.csv`: Kenyan public holidays
+- `inflation_data.csv`: national monthly inflation rate
+
+### Key Features
+- **Comprehensive Hypothesis Testing:** Utilizes both parametric and non-parametric tests (Welch t-tests, Mann-Whitney U, ANOVA, and Kruskal-Wallis) to handle varying data distributions.   
+- **Robust Diagnostic Checks:** Validates statistical assumptions including normality (Shapiro-Wilk, Jarque-Bera), homoscedasticity (Levene, Breusch-Pagan), and autocorrelation (Durbin-Watson).   
+- **Multi-Level Segmentation:** Analyzes performance across temporal factors (weekends, holidays, inflation trends), geographical segments, and customer-level aggregation.
+- **Predictive Modeling:** Implements OLS regression with proper feature encoding and complete residual diagnostics (Residuals vs. Fitted, QQ-plots, Scale-Location). 
+
+### Key findings
+- **Premium customers spend more per transaction**, by about KES 60 (CI roughly 20 to 99). The rank-based test is borderline (p = 0.068), so the evidence is moderate.
+- **Segment spend differs** (ANOVA p < 0.001): Premium is above both Budget and Regular, while Budget and Regular are not clearly different.
+- **No clear effect** of public holidays, weekends or location on transaction value.
+- **Customer type is linked to location** (chi-square p < 0.001).
+- **Monthly sales and inflation correlate**, but sales collapse after April, so this shouldn't be read as inflation driving sales.
+- **Customer-level check:** segments still differ in total spend (p = 0.021).
 
 
 
