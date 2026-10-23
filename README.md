@@ -39,6 +39,14 @@ All cleaned datasets are saved separately from raw data to ensure raw records re
    - `cleaned_data/holidays_data`
    - `cleaned_data/cpi_data`
 
+### How to run
+1. Install the libraries:
+ ```
+ pip install pandas numpy matplotlib seaborn scipy 
+ ```
+2. Update the file paths in the "Import data" cell to where your CSVs are.
+3. Run the notebook from top to bottom (Run All). The order matters, because later cells use tables built earlier
+
 ## Exploratory Data Analysis
 
 ### Data Sources (`cleaned_data/`)
@@ -84,6 +92,13 @@ All cleaned datasets are saved separately from raw data to ensure raw records re
 * **Statistical Analysis:** `scipy.stats`
 * **Visualization:** `matplotlib`, `seaborn`
 
+### How to run
+1. **Open the environment:** Launch Jupyter Notebook or JupyterLab on your machine.
+2. **Set up files:** Ensure the dataset files (`shop_data.csv`, `inflation_data.csv`, `holidays_data.csv`, `cpi_data.csv`, `population_data.csv`) are placed in the `cleaned_data` folder on your desktop.
+3. **Check paths:** Verify that the file path match your local directory structure.
+4. **Install dependencies:** Confirm that required libraries (`pandas`, `numpy`, `matplotlib`, `seaborn`, `scipy`) are installed in your Python environment.
+5. **Run all cells:** Execute the notebook cells sequentially from top to bottom to load libraries, merge data, and generate the analysis and visualizations.
+
 ## SQL Analytics
 ### Schema design and Data Pipeline
 The project operates under `sql_analysis` schema and transforms raw data imports into clean, normalized analysis tables.
@@ -127,6 +142,12 @@ Customers are categorized into 10 actionable marketing tiers based on `NTILE(5)`
 To support downstreamm dashboard, a unified wide reporting view `v_sals_enriched` is created.
 It pre-joins sales transactions with holiday flags, inflation trends, and RFM segments, backed by database indexes on `customer_id`, `invoice_no`, and date keys for query perfomance.
 
+### How to run
+1. Create a PostgreSQL database 
+2. Run the script's section 1 to create the raw_* tables (all columns text).
+3. Import each CSV into its raw_* table with DBeaver (Import Data > CSV). Check every column maps to existing, not skip.
+4. Run the rest of sql_analysis.sql in order
+
 ## Statistical Analysis
 (`statistical_analysis.ipynb`) notebook that uses hypothesis tests, confidence intervals and simple regression to answer practical questions about  sales, with the assumptions checked and a plain-language conclusion for each test.
 
@@ -164,9 +185,56 @@ It pre-joins sales transactions with holiday flags, inflation trends, and RFM se
 - **Monthly sales and inflation correlate**, but sales collapse after April, so this shouldn't be read as inflation driving sales.
 - **Customer-level check:** segments still differ in total spend (p = 0.021).
 
+### How to run
+1. Clone the repository and navigate to the project directory.
+2. Install the required dependencies:
+```
+pip install pandas numpy scipy statsmodels matplotlib seaborn
+```
+3. Open the Jupyter Notebook to run the pipeline:
+```
+jupyter notebook notebooks/statistical_analysis.ipynb
+```
 
+## Retail Demand Forecasting Model
+A time-series demand forecasting project built on sales transactions and national holiday data from Kenyan retail operations. This project establishes a naive baseline and evaluates a machine learning model using a strict, time-aware validation split.
 
+### Overview
+- **Goal:** Predict daily total item quantity demanded (`Quantity`).
+- **Data Source:** Kenyan retail store transactions (`shop_data.csv`) enriched with calendar holiday data (`holidays_data.csv`).
+- **Validation Strategy:** Chronological time-based split to avoid data leakage.
+  - **Train:** Jan 1, 2023 – Sep 30, 2023
+  - **Validation:** Oct 1, 2023 – Dec 31, 2023
 
+### Feature Engineering
+1. **Calendar Features:** Day of week, Month, Is Weekend, Is Holiday (`IsHoliday`).
+2. **Lagged Demand:** Lags for 1 day (`lag_1`), 7 days (`lag_7`), and 14 days (`lag_14`).
+3. **Rolling Statistics:** 7-day rolling mean (`roll_mean_7`) and 7-day rolling standard deviation (`roll_std_7`).
+
+### Model Performance & Results
+Models were evaluated on unseen test data (Q4 2023) using **Root Mean Squared Error (RMSE)** and **Mean Absolute Error (MAE)**:
+
+| Model | RMSE | MAE |
+| :--- | :---: | :---: |
+| **Baseline** (Lag-7 Persistence) | 1.51 | 1.11 |
+| **Random Forest Model** | **1.30** | **0.90** |
+
+The Random Forest model reduced absolute prediction error by **18.9%** over the naive baseline.
+
+### Model Limitations & Error Analysis
+What the model struggles with:
+1. **Unpredictable Demand Spikes:** Sudden, unannounced bulk purchases deviate from rolling window estimates.
+2. **Post-Holiday Dropoffs:** Sharply declining demand immediately following holidays can cause slight overestimation due to lagging features.
+
+### How to Run
+1. **Install Dependencies:**
+   ```bash
+   pip install pandas numpy scikit-learn
+   ```
+2. **Directory Setup:**
+   Place `shop_data.csv` and `holidays_data.csv` in your specified data path.
+3. **Execution:**
+   Run the Jupyter Notebook cells sequentially to aggregate data, engineer features, evaluate the baseline, and fit the model.
 
 
 
