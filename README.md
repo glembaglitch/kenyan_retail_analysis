@@ -236,9 +236,45 @@ What the model struggles with:
 3. **Execution:**
    Run the Jupyter Notebook cells sequentially to aggregate data, engineer features, evaluate the baseline, and fit the model.
 
+## Dashboard and Storytelling
+An interactive Power BI dashboard that analyses retail sales across several locations in Kenya. It covers revenue, quantities, customer types, products, monthly trends and RFM customer segments.
 
 
+### Dashboard at a glance
 
+**KPI cards**
+- Total Revenue: 220.78K
+- Quantity Sum: 2K
+- Invoice count: 1.422K
+- Number of Customers: 298
+
+**Visuals**
+| Visual | What it shows |
+|---|---|
+| Sum of Total Price by Location (bar + waterfall) | Revenue per branch/location |
+| Total Price by Customer Type & Invoice_no (area) | Sales over time, split by customer type |
+| Sum of Total Price by Customer Type (donut) | Budget vs Premium vs Regular share |
+| Unit Price, Quantity & Total Price by Product (scatter) | Price vs volume vs revenue per product |
+| Sum of Total Price by Product (column) | Best and worst selling products |
+| Sum of Total Price by Month (line) | Monthly sales trend |
+| Sum of Total Price by rfm_segment (treemap) | Revenue by customer segment (Recency, Frequency, Monetary) |
+
+**Slicers (filters)**
+- Invoice Month and Invoice Date (range sliders)
+- Customer Type: Budget, Premium, Regular
+- Location: Kitengela, Nairobi, Rongai, Roysambu, Ruaka, Ruiru and others
+- Products: Bread (400g), Cooking Oil, Eggs (Tray), Maize Flour (2kg), Milk (500ml), Rice (1kg), Sanitary Towels (Pack)
+
+### Q&As
+Next to the dashboard is `kenyan-retail-qa-insights` that contains five questions the dashboard visualizes.
+
+### How to run it
+1. **Install Power BI Desktop** from the Microsoft Store or the Power BI website, then open it.
+2. **Get the files.** Put the `.pbix` report and the source data file in the same folder.
+3. **Open the report.** In Power BI Desktop go to **File > Open report > Browse reports**, then pick the `.pbix` file.
+4. **Point it at your data (if prompted).** If you see a data source error, go to **Home > Transform data > Data source settings**, choose **Change Source**, and select your data file.
+5. **Refresh the data.** Click **Home > Refresh** so every visual loads the latest rows.
+6. **Explore.** Use the slicers on the left (Customer Type, Location, Products, Invoice Month and Date) to filter all visuals. Click any bar, slice or treemap block to cross-filter the rest of the page.
 
 
 
