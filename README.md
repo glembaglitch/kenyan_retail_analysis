@@ -1,289 +1,130 @@
-# Customer and Sales Intelligence for a Kenyan Retailer
+# Kenyan Retail Analysis
 
-## Project Overview 
-The project analyzes sales, customer behavior, and economic data for a growing Kenyan retail chain. The goal is to turn raw retail data into actionable insights, build predictive models, and deliver a comprehensive dashboard to guide management decisions.
+## Project Overview
 
-## Business Questions 
-- Who are the most valuable customers, and which ones are drifting away?
-- Which categories and regions generate the highest revenue?
-- How do external factors like population, inflation, public holidays and M-Pesa usage impact sales?
-- What is the projected product demand for the upcoming month?
+This project analyzes 2023 sales for a Kenyan retail business alongside public holiday, census, CPI, and inflation data. It combines data preparation, exploratory analysis, demand forecasting, statistical tests, SQL analytics, and a Power BI dashboard to support retail decisions.
 
-## Data Sources and Licensing
-- **Sales Transactions:** Adapted from `kenya_online_shop_data(Kaggle)` covering 12+ months across Nairobi and other Kenyan sub-counties.
-- **Economics Data:** Monthly CPI and inflation rates from `Kenya National Bureau of Statistics (KNBS)`.
-- **Demographics:** 2019 Kenya Population and Housing Census from (KNBS) and Kenyan public holidays from the web.
-- **Licensing:** Open data(public domain)
+## Business Questions
 
-## Data Cleaning and Preparation
-Raw datasets we're processed using python pipelines `notebooks/cleaning_pipeline.ipynb` that has the following:
-- **Duplicates:** Scanned and removed duplicates from `Kenya population and Housing Census Population households density by county (KE1,DF_POP_CENSUS_COU,1.0)`
-- **Blank Columns:** Scanned and removed unnecessary columns from `Kenya population and Housing Census Population households density by county (KE1,DF_POP_CENSUS_COU,1.0)`
+- How do sales vary by time, product, customer segment, and location?
+- Which products and customer segments contribute the most revenue?
+- How do public holidays, population, CPI, and inflation relate to sales?
+- Can daily product demand be forecast from recent sales and calendar features?
 
-The other datasets had everything in order after running `basic_ckecks`.
+## Project Layout
 
-### Before and After Summary
-- `kenya_online_shop_data`, `kenya_cpi_values_2009-01-01_to_2026-09-01`, `kenya_cpi_inflation_rates_2009-01-01_to_2026-09-01`, and `kenya_public_holidays_2020_2026` had everything in order, hence no changes we're made.
-- `Kenya population and Housing Census Population households density by county (KE1,DF_POP_CENSUS_COU,1.0)` :
-    - Before: `Shape(42507, 13)`
-    - After: `Shape(40491, 8)`
-    - Duplicates we're removed and unnecessary columns, which we're mainly blank we're removed.
- 
-### Processed Data Output
-All cleaned datasets are saved separately from raw data to ensure raw records remain untouched.
-- Output directory: `cleaned_data`
-- Files generated:
-   - `cleaned_data/shop_data`
-   - `cleaned_data/population_data`
-   - `cleaned_data/inflation_data`
-   - `cleaned_data/holidays_data`
-   - `cleaned_data/cpi_data`
+```text
+00_raw_data/       Source CSV and Excel files
+01_cleaned_data/   Prepared CSV files used by analysis notebooks
+02_notebooks/      Cleaning, EDA, forecasting, and statistical notebooks
+03_SQL_analysis/   PostgreSQL analytics script
+04_Dashboard/      Power BI report and dashboard Q&A document
+README.md
+```
 
-### How to run
-1. Install the libraries:
- ```
- pip install pandas numpy matplotlib seaborn scipy 
- ```
-2. Update the file paths in the "Import data" cell to where your CSVs are.
-3. Run the notebook from top to bottom (Run All). The order matters, because later cells use tables built earlier
+## Data Sources
 
-## Exploratory Data Analysis
+| Data | Source file | Source / use |
+|---|---|---|
+| Retail transactions | `kenyan_online_shop_data.csv` | Online shop dataset; transaction, product, customer, and location analysis |
+| Population | `Kenya population and Housing Census Population households density by county (KE1,DF_POP_CENSUS_COU,1.0).csv` | Kenya National Bureau of Statistics (KNBS), 2019 census |
+| Inflation | `kenya_cpi_inflation_rates_2009-01-01_to_2026-09-01.csv` | National monthly inflation series |
+| CPI | `kenya_cpi_values_2009-01-01_to_2026-09-01.csv` | National monthly Consumer Price Index series |
+| Public holidays | `kenya_public_holidays_2020_2026.xlsx` | Holiday dates used to flag sales and build calendar features |
 
-### Data Sources (`cleaned_data/`)
-**`shop_data.csv`**: 1,500 retail transaction records across 2023[cite: 5].
-**`cpi_data.csv`**: Consumer Price Index records (213 rows)[cite: 5].
-**`inflation_data.csv`**: Monthly inflation metrics (201 rows)[cite: 5].
-**`holidays_data.csv`**: Kenyan public holiday calendar (84 rows)[cite: 5].
-**`population_data.csv`**: Official Kenya Population and Housing Census data structured by county and gender[cite: 5].
+The source files are stored in `00_raw_data/`. The cleaning notebook writes its outputs to `01_cleaned_data/`.
 
-### What the notebook does `exploratory_data_analysis`
+## Notebook Workflow
 
-1. **Import data**: loads the five files.
-2. **Build the county table**: turns the raw census file (one row per area and sex) into one row per county, 47 in total.
-3. **Join shop and population data**: maps each shop town to its county (Nairobi, Roysambu and Umoja to Nairobi; Thika, Ruiru and Ruaka to Kiambu; Kitengela and Rongai to Kajiado), then merges the county population onto each order.
-4. **Distributions**: order value, units per order, and unit price by product.
-5. **Trends**: orders and average order value by month and by day.
-6. **Seasonality**: weekday, day of month, pay-window and holiday effects.
-7. **Stores, towns and counties**: revenue and order value by town, and orders against population by county.
-8. **Products**: revenue share, price against order count, and product mix by town.
-9. **Customer segments**: Budget, Regular and Premium compared on price paid, revenue share and product mix.
-10. **Macro context**: shop prices compared with national CPI and inflation.
+Run the notebooks in this order. The forecasting and statistical notebooks depend on the prepared files created by the cleaning notebook.
 
-### Top findings
+### 1. Data Cleaning and Preparation
 
-1. **Activity collapses after April.** January to April holds 84% of all orders (about 299 a month) against about 28 a month from May to December. Average order value stays flat, so it is lost volume, not smaller baskets.
-2. **Three products carry 60% of revenue.** Eggs, cooking oil and sanitary towels are 34% of orders but 60% of revenue.
-3. **Kajiado over-indexes, Nairobi under-indexes.** Kajiado has 14% of the three counties' population but 22% of orders (2.8 orders per 10,000 residents against 1.5 in Nairobi).
-4. **Premium customers pay the least for the same product.** About 7% below the product median, while Budget customers pay about 2% above.
-5. **Shop prices lag inflation.** The basket price rose about 3% over 2023 against CPI up 6.4%. With only 12 monthly points.
+Notebook: [`02_notebooks/cleanig_pipeline.ipynb`](02_notebooks/cleanig_pipeline.ipynb)
 
-### Assumptions and limits
+The pipeline profiles the input files, parses transaction dates and numeric fields, checks missing values and duplicates, reviews quantity and unit-price outlier candidates, and prepares calendar, holiday, revenue, and county fields for analysis.
 
-- The data has no store column, so the eight towns stand in for "stores".
-- Rongai is taken to be Ongata Rongai (Kajiado). There is another (Rongai in Nakuru), 
-- Census area names repeat across levels (for example KIAMBU is also a ward), so the county table keeps the largest row per county name. The 47 counties sum exactly to the national total of 47,564,296.
-- Orders with zero quantity (78 of 1,500 rows) are not real sales and are excluded.
-- No orders were found on 98 of 365 days, nearly all after April.
-- The population figures are from the 2019 census, while the shop data is from 2023.
+For the retail data, the source has 1,500 rows. The notebook finds no invalid dates or numeric values, saves the 78 zero-quantity rows separately, and excludes them from sales analysis, leaving 1,422 rows. The IQR check flags 29 quantity candidates and no unit-price candidates; these are listed for review and not automatically removed. For the census data, it removes 2,016 duplicate rows while preparing the county population table, which contains 47 counties.
 
-### Tech Stack & Libraries
-* **Language:** Python
-* **Data Manipulation:** `pandas`, `numpy`
-* **Statistical Analysis:** `scipy.stats`
-* **Visualization:** `matplotlib`, `seaborn`
+The notebook saves these files in `01_cleaned_data/`:
 
-### How to run
-1. **Open the environment:** Launch Jupyter Notebook or JupyterLab on your machine.
-2. **Set up files:** Ensure the dataset files (`shop_data.csv`, `inflation_data.csv`, `holidays_data.csv`, `cpi_data.csv`, `population_data.csv`) are placed in the `cleaned_data` folder on your desktop.
-3. **Check paths:** Verify that the file path match your local directory structure.
-4. **Install dependencies:** Confirm that required libraries (`pandas`, `numpy`, `matplotlib`, `seaborn`, `scipy`) are installed in your Python environment.
-5. **Run all cells:** Execute the notebook cells sequentially from top to bottom to load libraries, merge data, and generate the analysis and visualizations.
+- `shop_data.csv` — sales rows with derived calendar, holiday, revenue, and county fields
+- `zero_quantity_rows.csv` — the 78 zero-quantity records excluded from sales analysis
+- `population_data.csv` and `county_population.csv` — census source data and the 47-county population table
+- `inflation_data.csv` and `cpi_data.csv` — national monthly series
+- `holidays_data.csv` — holiday calendar
+
+### 2. Exploratory Data Analysis
+
+Notebook: [`02_notebooks/exploratory_data_analysis.ipynb`](02_notebooks/exploratory_data_analysis.ipynb)
+
+The analysis loads the prepared sales, CPI, inflation, holiday, and county population files. It examines transaction distributions, monthly and daily patterns, holiday and pay-window effects, towns and counties, product mix, customer segments, and shop prices against national CPI.
+
+Key findings from the notebook:
+
+- **Sales are concentrated early in the year:** January–April account for 84% of orders, averaging 299 orders per month; May–December average 28. There are no orders on 98 of the 365 days.
+- **A few products contribute much of revenue:** eggs, cooking oil, and sanitary towels together account for about 60% of revenue and 34% of orders.
+- **Budget is the largest revenue segment:** it represents 59.1% of customers and 61.1% of revenue. Premium has the highest average order value (KES 209.92) and averages 1.71 units per order, even though its unit prices average 0.927 times the median for each product.
+- **Order values vary across towns, but the notebook does not find a statistically significant difference** (Kruskal–Wallis p = 0.135). The customer-type mix does vary by location.
+- **Shop prices rose more slowly than CPI by the notebook’s trend estimate:** the estimated shop-price drift is 3.2% from January to December 2023, compared with a 6.4% CPI increase. This comparison uses only 12 monthly observations.
+
+Analysis assumptions and limits:
+
+- The sales data contains town/location names but no store identifier, so the eight locations are used as the geographic units.
+- The notebook maps Kitengela and Rongai to Kajiado; Nairobi, Roysambu, and Umoja to Nairobi; and Ruaka, Ruiru, and Thika to Kiambu.
+- Rongai is assumed to refer to Ongata Rongai in Kajiado.
+- The population data is from the 2019 census, while the transactions are from 2023. County names can also appear as lower-level census areas, so the county table selects the largest matching population rows.
+- The sales decline after April is visible in the data, but the notebooks do not establish its cause.
+
+### 3. Retail Demand Forecasting
+
+Notebook: [`02_notebooks/predictive_model.ipynb`](02_notebooks/predictive_model.ipynb)
+
+The notebook aggregates transactions into daily total quantity, fills calendar dates with no orders as zero, and adds weekday, month, weekend, holiday, lagged-demand, and rolling-window features. It compares a Random Forest regressor with lag-7 and training-mean baselines using a chronological split. The validation period is October 2–December 31, 2023.
+
+| Model | RMSE (units/day) | MAE (units/day) |
+|---|---:|---:|
+| Lag-7 baseline | 1.52 | 1.11 |
+| Training-mean baseline | 3.94 | 3.80 |
+| Random Forest | 1.19 | 0.94 |
+
+The Random Forest scores lower error than the lag-7 baseline on this holdout. The notebook also reports WAPE of 100.2%; daily average demand falls from 4.72 units in training to 0.93 in validation. This sharp change and the high WAPE are important limits when interpreting the forecast. Five-fold time-series validation also shows the Random Forest beating the lag-7 baseline on folds 1–4; both models perform poorly on the first fold, which has little training history.
+
+### 4. Statistical Analysis
+
+Notebook: [`02_notebooks/statistical_analysis.ipynb`](02_notebooks/statistical_analysis.ipynb)
+
+The notebook tests differences in transaction value by customer type, holiday, weekend, and location; tests the relationship between customer type and location; estimates confidence intervals; examines monthly sales and inflation; and fits an OLS model with residual diagnostics. It also repeats segment comparisons after aggregating to the customer level.
+
+Selected results:
+
+- Premium transactions average about KES 209.92 versus KES 150.23 for non-Premium transactions. The mean difference is KES 59.69 (95% CI: KES 20.12–99.27); Welch’s test is significant (p = 0.002), while the Mann–Whitney result is borderline (p = 0.068).
+- Average transaction value does not differ significantly by holiday, weekend, or location in the notebook’s tests.
+- Customer type is associated with location (chi-square p < 0.001); this is an association, not evidence that location causes customer-type differences.
+- The 95% confidence interval for mean transaction value is KES 149.31–161.21. The Wilson interval for the share of zero-quantity rows is 4.2%–6.4%.
+- Monthly sales correlate with inflation in the 2023 data, but the sharp sales decline after April makes that relationship fragile and unsuitable for a causal interpretation.
+- At the customer level, total spend differs across segments (ANOVA p = 0.021); average order value also differs (ANOVA p < 0.001).
+
+## Running the Notebooks
+
+1. Install Python and Jupyter, then install the notebook libraries:
+
+   ```bash
+   pip install pandas numpy scipy statsmodels matplotlib seaborn scikit-learn openpyxl jupyter
+   ```
+
+2. Keep the source files in `00_raw_data/` and ensure `01_cleaned_data/` exists.
+3. The notebooks currently contain absolute Windows paths. Update the file paths in their import and output cells to match your local project folder.
+4. Run `cleanig_pipeline.ipynb` first, then run the EDA, forecasting, and statistical notebooks from top to bottom.
 
 ## SQL Analytics
-### Schema design and Data Pipeline
-The project operates under `sql_analysis` schema and transforms raw data imports into clean, normalized analysis tables.
 
-### Cleaned Analysis Tables
-- `shop_clean`: Transaction level detailed cleaned of nulls, negative quantities/prices and duplicate line items. Key primary key `line_id`.
-- `cpi_clean` & `inflation_clean`: Time series macroeconomic data normalized to monthly dates(`period_month`).
-- `holidays_clean`: Calendar table of national holidays used to uvaluate holiday demand lift.
-- `population_clean`: Regional census data used to callcute revenue per capita.
-- `rfm_segmments`:Persistent customer scoring table based on Recency, Frequency and Monetary scores(1 to 5 scale).
+The PostgreSQL script is [`03_SQL_analysis/sql_analysis.sql`](03_SQL_analysis/sql_analysis.sql). It creates the `sql_analysis` schema, imports raw tables, prepares clean analysis tables, and includes queries for KPIs, product and location summaries, holiday and macroeconomic joins, market baskets, time-based window analyses, customer cohorts, and RFM segmentation. The script creates the `v_sales_enriched` reporting view for BI tools.
 
-### Key Business Analysis & SQL Implementation
-**A. Core Aggregation & KPIs**
-- *Overal Metrics*: Compute aggregate revenue, total orders, distinct customers, Average Order Value (AOV), and Units per Order.
-- *DimensionalBreakdown*: Revenue cut by product, region/location, customer type, and time dimensions (day of week, hour of day).
+To run it, create a PostgreSQL database, run the script’s setup section, import the CSV data into the corresponding `raw_*` tables, follow the column-renaming steps, then execute the remaining sections in order.
 
-**B. Analytical Joins**
-- *Macro Intergration(`c_cpi_monthly`, `v_inflation_monthly`)*: Combines monthly sales with CPI data to calculate real life inflation-adjusted revenue growth.
-- *Holiday Lift Analysis*: Joins holiday dates with sales to compare average daily revenue on regular vs. holiday days and 3-day pre-holiday windows.
-- *Population Normalization*: Evaluates regional market penetration by calculating revenue per capita against official census population figures.
-- *Market Basket Analysis*: Self-joins `shop_clean` to identify co-purchased product pairs at the invoice level and customer level.
+## Dashboard
 
-**C. Window Functions**
-- *Growth & MoM Trends*: Utilizes `LAG()` and moving averages over 3-month frames to measure revenue momentum and MoM growth rate.
-- *Ranking & Pareto Distribution*: Uses `DENSE_RANK()` for top three products per location and `RANK()`/`NTILE()` to verify revenue concentration (Pareto principle).
-- *Customer Lifetime Value & Recency*: Uses windowed `ROW_NUMBER()`, cumulative `SUM()` and `LAG()` to track order sequencing and inter-purchase intervals.
+The Power BI report is [`04_Dashboard/kr_dashboard.pbix`](04_Dashboard/kr_dashboard.pbix). It summarizes revenue, quantity, invoices, customers, locations, customer types, products, monthly sales, and RFM segments. The accompanying [`04_Dashboard/kenyan-retail-qa-insights.docx`](04_Dashboard/kenyan-retail-qa-insights.docx) contains questions the dashboard is designed to answer.
 
-**D. Customer Cohorts & Retention Analysis**
-- Tracks customer acquisition month cohorts(`cohort_month`) using `MIN(invoice_month)`.
-- Generates a Retention Matrix (Heatmap) showing active customer drop-off over 0 to 60 months post-acquisition.
-- Analyzes revenue expansion per active customer across cohort lifecycles
-
-**E. RFM Segmentation**
-Customers are categorized into 10 actionable marketing tiers based on `NTILE(5)` scores across Recency, Frequency and Monetary value:
-   - *Champions*: High recency, frequency and spend (R $\ge$ 4, F $\ge$ 4, M $\ge$ 4).
-   - *Loyal Customers/Potential Loyalists*: Stable repeat purchasers.
-   - *At Risk/Can't Loose them*: High historical monetary spend with lagging recent activity.
-   - *Hibernating/Lost*: Low scores across all dimensions.
-
-### Reporting View and Execution
-To support downstreamm dashboard, a unified wide reporting view `v_sals_enriched` is created.
-It pre-joins sales transactions with holiday flags, inflation trends, and RFM segments, backed by database indexes on `customer_id`, `invoice_no`, and date keys for query perfomance.
-
-### How to run
-1. Create a PostgreSQL database 
-2. Run the script's section 1 to create the raw_* tables (all columns text).
-3. Import each CSV into its raw_* table with DBeaver (Import Data > CSV). Check every column maps to existing, not skip.
-4. Run the rest of sql_analysis.sql in order
-
-## Statistical Analysis
-(`statistical_analysis.ipynb`) notebook that uses hypothesis tests, confidence intervals and simple regression to answer practical questions about  sales, with the assumptions checked and a plain-language conclusion for each test.
-
-### What's in the notebook
-
-| # | Question | Methods |
-|---|----------|---------|
-| 1 | Do Premium customers pay more per transaction? | Shapiro-Wilk, Welch t-test, Mann-Whitney U, 95% CI for the difference |
-| 2 | Does average spend differ across Budget / Regular / Premium? | One-way ANOVA, Levene, Tukey HSD |
-| 3 | Do sales differ on public holidays? | Welch t-test, Mann-Whitney U |
-| 4 | Do weekends differ from weekdays? | Welch t-test, Mann-Whitney U |
-| 5 | Does spend differ across the 8 locations? | ANOVA, Kruskal-Wallis, Tukey HSD |
-| 6 | Is customer type linked to location? | Chi-square test, heatmap |
-| 7 | What is the overall mean transaction value, and how common are zero-quantity rows? | t-based CI, Wilson CI |
-| 8 | Do monthly sales move with inflation? | Pearson and Spearman correlation |
-| 9 | What drives transaction value? | Correlation, OLS regression, residual diagnostics |
-| 10 | Do segments differ when each customer counts once? | Customer-level aggregation, ANOVA |
-
-### Data files
-- `shop_data.csv`: 1,500 invoices (product, quantity, price, date, location, customer type)
-- `holidays_data.csv`: Kenyan public holidays
-- `inflation_data.csv`: national monthly inflation rate
-
-### Key Features
-- **Comprehensive Hypothesis Testing:** Utilizes both parametric and non-parametric tests (Welch t-tests, Mann-Whitney U, ANOVA, and Kruskal-Wallis) to handle varying data distributions.   
-- **Robust Diagnostic Checks:** Validates statistical assumptions including normality (Shapiro-Wilk, Jarque-Bera), homoscedasticity (Levene, Breusch-Pagan), and autocorrelation (Durbin-Watson).   
-- **Multi-Level Segmentation:** Analyzes performance across temporal factors (weekends, holidays, inflation trends), geographical segments, and customer-level aggregation.
-- **Predictive Modeling:** Implements OLS regression with proper feature encoding and complete residual diagnostics (Residuals vs. Fitted, QQ-plots, Scale-Location). 
-
-### Key findings
-- **Premium customers spend more per transaction**, by about KES 60 (CI roughly 20 to 99). The rank-based test is borderline (p = 0.068), so the evidence is moderate.
-- **Segment spend differs** (ANOVA p < 0.001): Premium is above both Budget and Regular, while Budget and Regular are not clearly different.
-- **No clear effect** of public holidays, weekends or location on transaction value.
-- **Customer type is linked to location** (chi-square p < 0.001).
-- **Monthly sales and inflation correlate**, but sales collapse after April, so this shouldn't be read as inflation driving sales.
-- **Customer-level check:** segments still differ in total spend (p = 0.021).
-
-### How to run
-1. Clone the repository and navigate to the project directory.
-2. Install the required dependencies:
-```
-pip install pandas numpy scipy statsmodels matplotlib seaborn
-```
-3. Open the Jupyter Notebook to run the pipeline:
-```
-jupyter notebook notebooks/statistical_analysis.ipynb
-```
-
-## Retail Demand Forecasting Model
-A time-series demand forecasting project built on sales transactions and national holiday data from Kenyan retail operations. This project establishes a naive baseline and evaluates a machine learning model using a strict, time-aware validation split.
-
-### Overview
-- **Goal:** Predict daily total item quantity demanded (`Quantity`).
-- **Data Source:** Kenyan retail store transactions (`shop_data.csv`) enriched with calendar holiday data (`holidays_data.csv`).
-- **Validation Strategy:** Chronological time-based split to avoid data leakage.
-  - **Train:** Jan 1, 2023 – Sep 30, 2023
-  - **Validation:** Oct 1, 2023 – Dec 31, 2023
-
-### Feature Engineering
-1. **Calendar Features:** Day of week, Month, Is Weekend, Is Holiday (`IsHoliday`).
-2. **Lagged Demand:** Lags for 1 day (`lag_1`), 7 days (`lag_7`), and 14 days (`lag_14`).
-3. **Rolling Statistics:** 7-day rolling mean (`roll_mean_7`) and 7-day rolling standard deviation (`roll_std_7`).
-
-### Model Performance & Results
-Models were evaluated on unseen test data (Q4 2023) using **Root Mean Squared Error (RMSE)** and **Mean Absolute Error (MAE)**:
-
-| Model | RMSE | MAE |
-| :--- | :---: | :---: |
-| **Baseline** (Lag-7 Persistence) | 1.51 | 1.11 |
-| **Random Forest Model** | **1.30** | **0.90** |
-
-The Random Forest model reduced absolute prediction error by **18.9%** over the naive baseline.
-
-### Model Limitations & Error Analysis
-What the model struggles with:
-1. **Unpredictable Demand Spikes:** Sudden, unannounced bulk purchases deviate from rolling window estimates.
-2. **Post-Holiday Dropoffs:** Sharply declining demand immediately following holidays can cause slight overestimation due to lagging features.
-
-### How to Run
-1. **Install Dependencies:**
-   ```bash
-   pip install pandas numpy scikit-learn
-   ```
-2. **Directory Setup:**
-   Place `shop_data.csv` and `holidays_data.csv` in your specified data path.
-3. **Execution:**
-   Run the Jupyter Notebook cells sequentially to aggregate data, engineer features, evaluate the baseline, and fit the model.
-
-## Dashboard and Storytelling
-An interactive Power BI dashboard that analyses retail sales across several locations in Kenya. It covers revenue, quantities, customer types, products, monthly trends and RFM customer segments.
-
-
-### Dashboard at a glance
-
-**KPI cards**
-- Total Revenue: 220.78K
-- Quantity Sum: 2K
-- Invoice count: 1.422K
-- Number of Customers: 298
-
-**Visuals**
-| Visual | What it shows |
-|---|---|
-| Sum of Total Price by Location (bar + waterfall) | Revenue per branch/location |
-| Total Price by Customer Type & Invoice_no (area) | Sales over time, split by customer type |
-| Sum of Total Price by Customer Type (donut) | Budget vs Premium vs Regular share |
-| Unit Price, Quantity & Total Price by Product (scatter) | Price vs volume vs revenue per product |
-| Sum of Total Price by Product (column) | Best and worst selling products |
-| Sum of Total Price by Month (line) | Monthly sales trend |
-| Sum of Total Price by rfm_segment (treemap) | Revenue by customer segment (Recency, Frequency, Monetary) |
-
-**Slicers (filters)**
-- Invoice Month and Invoice Date (range sliders)
-- Customer Type: Budget, Premium, Regular
-- Location: Kitengela, Nairobi, Rongai, Roysambu, Ruaka, Ruiru and others
-- Products: Bread (400g), Cooking Oil, Eggs (Tray), Maize Flour (2kg), Milk (500ml), Rice (1kg), Sanitary Towels (Pack)
-
-### Q&As
-Next to the dashboard is `kenyan-retail-qa-insights` that contains five questions the dashboard visualizes.
-
-### How to run it
-1. **Install Power BI Desktop** from the Microsoft Store or the Power BI website, then open it.
-2. **Get the files.** Put the `.pbix` report and the source data file in the same folder.
-3. **Open the report.** In Power BI Desktop go to **File > Open report > Browse reports**, then pick the `.pbix` file.
-4. **Point it at your data (if prompted).** If you see a data source error, go to **Home > Transform data > Data source settings**, choose **Change Source**, and select your data file.
-5. **Refresh the data.** Click **Home > Refresh** so every visual loads the latest rows.
-6. **Explore.** Use the slicers on the left (Customer Type, Location, Products, Invoice Month and Date) to filter all visuals. Click any bar, slice or treemap block to cross-filter the rest of the page.
-
-
-
-
-
-
-
-
-
-
-
-
+Open the report in Power BI Desktop, update its data-source paths if prompted, and refresh the report. Slicers let users filter by date, customer type, location, and product.
